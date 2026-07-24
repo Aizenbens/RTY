@@ -2,14 +2,15 @@ import * as THREE from "https://unpkg.com/three@0.167.1/build/three.module.js";
 
 import Player from "./player.js";
 import Weapon from "./weapon.js";
+import Enemy from "./enemy.js";
 
 export default class Engine {
 
     constructor() {
 
         this.scene = new THREE.Scene();
-
         this.scene.background = new THREE.Color(0x87CEEB);
+        this.scene.fog = new THREE.Fog(0x87CEEB, 80, 180);
 
         this.camera = new THREE.PerspectiveCamera(
             75,
@@ -21,11 +22,8 @@ export default class Engine {
         this.scene.add(this.camera);
 
         this.renderer = new THREE.WebGLRenderer({
-
             canvas: document.getElementById("gameCanvas"),
-
             antialias: true
-
         });
 
         this.renderer.setSize(
@@ -48,11 +46,15 @@ export default class Engine {
             this.camera
         );
 
+        this.enemies = [];
+
         this.createLights();
 
         this.createGround();
 
-        this.createObjects();
+        this.createEnvironment();
+
+        this.spawnEnemies();
 
         this.setupEvents();
 
@@ -65,11 +67,8 @@ export default class Engine {
             this.camera.updateProjectionMatrix();
 
             this.renderer.setSize(
-
                 window.innerWidth,
-
                 window.innerHeight
-
             );
 
         });
@@ -78,10 +77,11 @@ export default class Engine {
 
     createLights() {
 
-        const ambient = new THREE.AmbientLight(
-            0xffffff,
-            2
-        );
+        const ambient =
+            new THREE.AmbientLight(
+                0xffffff,
+                2
+            );
 
         this.scene.add(ambient);
 
@@ -91,15 +91,18 @@ export default class Engine {
                 3
             );
 
-        sun.position.set(25,40,15);
+        sun.position.set(25,40,25);
 
         sun.castShadow = true;
+
+        sun.shadow.mapSize.width = 2048;
+        sun.shadow.mapSize.height = 2048;
 
         this.scene.add(sun);
 
     }
 
-    createGround(){
+    createGround() {
 
         const ground =
             new THREE.Mesh(
@@ -111,14 +114,13 @@ export default class Engine {
 
                 new THREE.MeshStandardMaterial({
 
-                    color:0x2f9e44
+                    color:0x3AA655
 
                 })
 
             );
 
-        ground.rotation.x =
-            -Math.PI/2;
+        ground.rotation.x = -Math.PI/2;
 
         ground.receiveShadow = true;
 
@@ -128,19 +130,26 @@ export default class Engine {
 
     }
 
-    createObjects(){
+    createEnvironment() {
 
-        for(let i=0;i<20;i++){
+        for(let i=0;i<60;i++){
 
             const cube =
                 new THREE.Mesh(
 
-                    new THREE.BoxGeometry(2,2,2),
+                    new THREE.BoxGeometry(
+
+                        2 + Math.random()*4,
+
+                        2 + Math.random()*8,
+
+                        2 + Math.random()*4
+
+                    ),
 
                     new THREE.MeshStandardMaterial({
 
-                        color:
-                        Math.random()*0xffffff
+                        color:Math.random()*0xffffff
 
                     })
 
@@ -148,19 +157,18 @@ export default class Engine {
 
             cube.position.set(
 
-                (Math.random()-0.5)*80,
+                (Math.random()-0.5)*180,
 
-                1,
+                cube.geometry.parameters.height/2,
 
-                (Math.random()-0.5)*80
+                (Math.random()-0.5)*180
 
             );
 
             cube.castShadow = true;
-
             cube.receiveShadow = true;
 
-            cube.name = "Box";
+            cube.name = "Wall";
 
             this.scene.add(cube);
 
@@ -168,43 +176,64 @@ export default class Engine {
 
     }
 
-    setupEvents(){
+    spawnEnemies(){
 
-        window.addEventListener(
+        for(let i=0;i<10;i++){
 
-            "mousedown",
+            const enemy = new Enemy(
 
-            ()=>{
+                this.scene,
 
-                this.weapon.shoot();
+                (Math.random()-0.5)*100,
+
+                (Math.random()-0.5)*100
+
+            );
+
+            this.enemies.push(enemy);
+
+        }
+
+    }
+        setupEvents() {
+
+        window.addEventListener("mousedown", () => {
+
+            this.weapon.shoot();
+
+        });
+
+        window.addEventListener("keydown", (e) => {
+
+            if (e.code === "KeyR") {
+
+                this.weapon.reload();
 
             }
 
-        );
-
-        window.addEventListener(
-
-            "keydown",
-
-            (e)=>{
-
-                if(e.code==="KeyR")
-
-                    this.weapon.reload();
-
-            }
-
-        );
+        });
 
     }
 
-    update(delta){
+    update(delta) {
 
         this.player.update(delta);
 
+        for (const enemy of this.enemies) {
+
+            enemy.update(
+
+                delta,
+
+                this.player.position
+
+            );
+
+        }
+
     }
 
-    render(){
+    render() {
 
         this.renderer.render(
 
@@ -216,14 +245,13 @@ export default class Engine {
 
     }
 
-    start(){
+    start() {
 
-        const loop=()=>{
+        const animate = () => {
 
-            requestAnimationFrame(loop);
+            requestAnimationFrame(animate);
 
-            const delta =
-                this.clock.getDelta();
+            const delta = this.clock.getDelta();
 
             this.update(delta);
 
@@ -231,7 +259,7 @@ export default class Engine {
 
         };
 
-        loop();
+        animate();
 
     }
 
