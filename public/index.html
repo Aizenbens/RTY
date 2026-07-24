@@ -1,61 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, user-scalable=no">
 
     <title>RTY FPS</title>
 
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/hud.css">
-    <link rel="stylesheet" href="css/menu.css">
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial,Helvetica,sans-serif;
+        }
 
+        body{
+            overflow:hidden;
+            background:#000;
+        }
+
+        canvas{
+            display:block;
+        }
+
+        #mainMenu{
+            position:fixed;
+            inset:0;
+            background:linear-gradient(180deg,#101522,#05070d);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            z-index:100;
+        }
+
+        .menu{
+            width:420px;
+            background:#1b2233;
+            border-radius:18px;
+            padding:30px;
+            text-align:center;
+            box-shadow:0 0 40px rgba(0,0,0,.6);
+        }
+
+        h1{
+            color:#39bdf8;
+            margin-bottom:20px;
+            font-size:42px;
+        }
+
+        p{
+            color:white;
+            margin-bottom:20px;
+        }
+
+        input,select{
+            width:100%;
+            padding:12px;
+            margin:8px 0;
+            border:none;
+            border-radius:8px;
+            background:#2b3652;
+            color:white;
+            font-size:16px;
+        }
+
+        button{
+            width:100%;
+            padding:14px;
+            margin-top:12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:18px;
+            font-weight:bold;
+        }
+
+        #playButton{
+            background:#00d26a;
+            color:white;
+        }
+
+        #settingsButton{
+            background:#2196F3;
+            color:white;
+        }
+
+        #leaderboardButton{
+            background:#ff9800;
+            color:white;
+        }
+
+        #hud{
+            position:fixed;
+            top:15px;
+            left:15px;
+            color:white;
+            display:none;
+            font-size:20px;
+            z-index:10;
+        }
+
+        #crosshair{
+            position:fixed;
+            left:50%;
+            top:50%;
+            transform:translate(-50%,-50%);
+            font-size:34px;
+            color:white;
+            display:none;
+            z-index:10;
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- شاشة التحميل -->
-    <div id="loadingScreen">
+<div id="mainMenu">
+
+    <div class="menu">
 
         <h1>RTY FPS</h1>
 
-        <p>Loading...</p>
+        <p>Ultimate Edition</p>
+
+        <input
+            id="playerName"
+            placeholder="Player Name"
+            value="Player">
+
+        <select id="weapon">
+
+            <option>AK-47</option>
+            <option>M4A1</option>
+            <option>Sniper</option>
+            <option>Shotgun</option>
+
+        </select>
+
+        <button id="playButton">
+            ▶ PLAY
+        </button>
+
+        <button id="settingsButton">
+            ⚙ SETTINGS
+        </button>
+
+        <button id="leaderboardButton">
+            🏆 LEADERBOARD
+        </button>
 
     </div>
 
-    <!-- القائمة الرئيسية -->
-    <div id="mainMenu">
+</div>
 
-        <h1>RTY FPS</h1>
+<div id="hud">
 
-        <button id="playButton">Play</button>
+    ❤️ HP :
+    <span id="health">100</span>
 
-        <button id="settingsButton">Settings</button>
+    <br><br>
 
-    </div>
+    🔫 Ammo :
+    <span id="ammo">30</span>
 
-    <!-- واجهة اللعب -->
-    <div id="hud">
+</div>
 
-        <div id="health">100 HP</div>
+<div id="crosshair">+</div>
 
-        <div id="ammo">30 / 120</div>
+<canvas id="gameCanvas"></canvas>
 
-        <div id="crosshair">+</div>
-
-        <div id="killFeed"></div>
-
-    </div>
-
-    <!-- مكان عرض اللعبة -->
-    <canvas id="gameCanvas"></canvas>
-
-    <script type="module" src="js/main.js"></script>
+<script type="module" src="js/engine.js"></script>
+<script type="module" src="js/main.js"></script>
 
 </body>
 </html>
