@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>RTY FPS</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/hud.css">
+    <link rel="stylesheet" href="css/menu.css">
+
+</head>
+
+<body>
+
+    <!-- شاشة التحميل -->
+    <div id="loadingScreen">
+
+        <h1>RTY FPS</h1>
+
+        <p>Loading...</p>
+
+    </div>
+
+    <!-- القائمة الرئيسية -->
+    <div id="mainMenu">
+
+        <h1>RTY FPS</h1>
+
+        <button id="playButton">Play</button>
+
+        <button id="settingsButton">Settings</button>
+
+    </div>
+
+    <!-- واجهة اللعب -->
+    <div id="hud">
+
+        <div id="health">100 HP</div>
+
+        <div id="ammo">30 / 120</div>
+
+        <div id="crosshair">+</div>
+
+        <div id="killFeed"></div>
+
+    </div>
+
+    <!-- مكان عرض اللعبة -->
+    <canvas id="gameCanvas"></canvas>
+
+    <script type="module" src="js/main.js"></script>
+
+</body>
+</html>
