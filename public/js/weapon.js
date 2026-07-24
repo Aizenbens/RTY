@@ -25,19 +25,122 @@ export default class Weapon {
 
         this.raycaster = new THREE.Raycaster();
 
+        this.createWeaponModel();
+
         this.createMuzzleFlash();
+
+        this.updateHUD();
+
+    }
+
+    createWeaponModel() {
+
+        this.weapon = new THREE.Group();
+
+        const body = new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                0.18,
+                0.18,
+                0.9
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color: 0x333333,
+
+                metalness: 0.8,
+
+                roughness: 0.3
+
+            })
+
+        );
+
+        body.position.z = -0.45;
+
+        this.weapon.add(body);
+
+        const barrel = new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                0.03,
+                0.03,
+                0.55,
+                16
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color: 0x111111
+
+            })
+
+        );
+
+        barrel.rotation.x = Math.PI / 2;
+
+        barrel.position.set(
+            0,
+            0,
+            -0.95
+        );
+
+        this.weapon.add(barrel);
+
+        const handle = new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                0.12,
+                0.35,
+                0.12
+            ),
+
+            new THREE.MeshStandardMaterial({
+
+                color: 0x222222
+
+            })
+
+        );
+
+        handle.position.set(
+            0,
+            -0.22,
+            -0.2
+        );
+
+        handle.rotation.z = 0.35;
+
+        this.weapon.add(handle);
+
+        this.camera.add(this.weapon);
+
+        this.weapon.position.set(
+
+            0.35,
+
+            -0.30,
+
+            -0.60
+
+        );
 
     }
 
     createMuzzleFlash() {
 
         const geometry =
-            new THREE.SphereGeometry(0.08, 12, 12);
+            new THREE.SphereGeometry(
+                0.08,
+                12,
+                12
+            );
 
         const material =
             new THREE.MeshBasicMaterial({
 
-                color: 0xffcc44
+                color: 0xffdd55
 
             });
 
@@ -49,17 +152,15 @@ export default class Weapon {
 
         this.flash.visible = false;
 
-        this.camera.add(this.flash);
+        this.weapon.add(this.flash);
 
         this.flash.position.set(
-            0.35,
-            -0.15,
-            -0.8
+            0,
+            0,
+            -1.25
         );
 
-    }
-
-    shoot() {
+    }    shoot() {
 
         if (this.reloading)
             return;
@@ -85,41 +186,58 @@ export default class Weapon {
 
         this.flash.visible = true;
 
+        this.weapon.position.z = -0.65;
+
         setTimeout(() => {
 
             this.flash.visible = false;
 
+            this.weapon.position.z = -0.60;
+
         },40);
 
         this.raycaster.setFromCamera(
+
             new THREE.Vector2(0,0),
+
             this.camera
+
         );
 
-        const objects =
-            this.scene.children;
+        const hit = this.raycaster.intersectObjects(
 
-       const hit = this.raycaster.intersectObjects(
-    this.scene.children,
-    true
-);
+            this.scene.children,
 
-if (hit.length > 0) {
+            true
 
-    const object = hit[0].object;
-
-    if (
-        object.parent &&
-        object.parent.userData.enemy
-    ) {
-
-        object.parent.userData.enemy.takeDamage(
-            this.damage
         );
+
+        if(hit.length){
+
+            let object = hit[0].object;
+
+            while(object){
+
+                if(object.userData.enemy){
+
+                    object.userData.enemy.takeDamage(
+
+                        this.damage
+
+                    );
+
+                    break;
+
+                }
+
+                object = object.parent;
+
+            }
+
+        }
 
     }
 
-}
     reload(){
 
         if(this.reloading)
@@ -131,8 +249,7 @@ if (hit.length > 0) {
 
         setTimeout(()=>{
 
-            this.ammo =
-                this.maxAmmo;
+            this.ammo = this.maxAmmo;
 
             this.reloading = false;
 
@@ -144,15 +261,29 @@ if (hit.length > 0) {
 
     updateHUD(){
 
-        const ammo =
-            document.getElementById("ammo");
+        const ammo = document.getElementById("ammo");
 
         if(ammo){
 
-            ammo.textContent =
-                this.ammo;
+            ammo.textContent = this.ammo;
 
         }
+
+    }
+
+    update(delta){
+
+        this.weapon.position.x +=
+
+            (0.35 - this.weapon.position.x)
+
+            * 8 * delta;
+
+        this.weapon.position.y +=
+
+            (-0.30 - this.weapon.position.y)
+
+            * 8 * delta;
 
     }
 
