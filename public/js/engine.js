@@ -8,119 +8,212 @@ export default class Engine {
 
     constructor() {
 
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87CEEB);
-        this.scene.fog = new THREE.Fog(0x87CEEB, 80, 180);
+        /* ==========================
+           Scene
+        ========================== */
 
-        this.camera = new THREE.PerspectiveCamera(
-            75,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            1000
+        this.scene = new THREE.Scene();
+
+        this.scene.background =
+            new THREE.Color(0x87CEEB);
+
+        this.scene.fog =
+            new THREE.Fog(
+                0x87CEEB,
+                70,
+                220
+            );
+
+        /* ==========================
+           Camera
+        ========================== */
+
+        this.camera =
+            new THREE.PerspectiveCamera(
+
+                75,
+
+                window.innerWidth /
+                window.innerHeight,
+
+                0.1,
+
+                1000
+
+            );
+
+        this.camera.position.set(
+            0,
+            2,
+            5
         );
 
-        this.scene.add(this.camera);
+        this.scene.add(
+            this.camera
+        );
 
-        this.renderer = new THREE.WebGLRenderer({
-            canvas: document.getElementById("gameCanvas"),
-            antialias: true
-        });
+        /* ==========================
+           Renderer
+        ========================== */
+
+        this.renderer =
+            new THREE.WebGLRenderer({
+
+                canvas:
+                    document.getElementById(
+                        "gameCanvas"
+                    ),
+
+                antialias:true,
+
+                alpha:false
+
+            });
 
         this.renderer.setSize(
+
             window.innerWidth,
+
             window.innerHeight
+
         );
 
         this.renderer.setPixelRatio(
-            window.devicePixelRatio
+
+            Math.min(
+
+                window.devicePixelRatio,
+
+                2
+
+            )
+
         );
 
         this.renderer.shadowMap.enabled = true;
 
-        this.clock = new THREE.Clock();
+        this.renderer.shadowMap.type =
+            THREE.PCFSoftShadowMap;
 
-        this.player = new Player(this.camera);
+        /* ==========================
+           Clock
+        ========================== */
 
-        this.weapon = new Weapon(
-            this.scene,
-            this.camera
-        );
+        this.clock =
+            new THREE.Clock();
+
+        /* ==========================
+           Game Objects
+        ========================== */
+
+        this.player =
+            new Player(
+                this.camera
+            );
+
+        this.weapon =
+            new Weapon(
+
+                this.scene,
+
+                this.camera
+
+            );
+
+        /* ==========================
+           Arrays
+        ========================== */
 
         this.enemies = [];
 
-        this.createLights();
+        this.walls = [];
 
-        this.createGround();
+        this.pickups = [];
 
-        this.createEnvironment();
+        this.bullets = [];
 
-        this.spawnEnemies();
+        /* ==========================
+           Settings
+        ========================== */
 
-        this.setupEvents();
+        this.enemyCount = 12;
 
-        window.addEventListener("resize", () => {
+        this.worldSize = 250;
 
-            this.camera.aspect =
-                window.innerWidth /
-                window.innerHeight;
-
-            this.camera.updateProjectionMatrix();
-
-            this.renderer.setSize(
-                window.innerWidth,
-                window.innerHeight
-            );
-
-        });
-
-    }
+        this.running = false;    /* ==========================
+       LIGHTS
+    ========================== */
 
     createLights() {
 
-        const ambient =
-            new THREE.AmbientLight(
-                0xffffff,
-                2
-            );
+        const ambient = new THREE.AmbientLight(
+            0xffffff,
+            2
+        );
 
         this.scene.add(ambient);
 
-        const sun =
-            new THREE.DirectionalLight(
-                0xffffff,
-                3
-            );
+        const sun = new THREE.DirectionalLight(
+            0xffffff,
+            3
+        );
 
-        sun.position.set(25,40,25);
+        sun.position.set(50, 80, 40);
 
         sun.castShadow = true;
 
         sun.shadow.mapSize.width = 2048;
         sun.shadow.mapSize.height = 2048;
 
+        sun.shadow.camera.left = -100;
+        sun.shadow.camera.right = 100;
+        sun.shadow.camera.top = 100;
+        sun.shadow.camera.bottom = -100;
+
         this.scene.add(sun);
 
     }
 
+    /* ==========================
+       GROUND
+    ========================== */
+
     createGround() {
+
+        const geometry =
+            new THREE.PlaneGeometry(
+
+                this.worldSize,
+
+                this.worldSize,
+
+                50,
+
+                50
+
+            );
+
+        const material =
+            new THREE.MeshStandardMaterial({
+
+                color: 0x3BAA3B,
+
+                roughness: 1,
+
+                metalness: 0
+
+            });
 
         const ground =
             new THREE.Mesh(
 
-                new THREE.PlaneGeometry(
-                    500,
-                    500
-                ),
+                geometry,
 
-                new THREE.MeshStandardMaterial({
-
-                    color:0x3AA655
-
-                })
+                material
 
             );
 
-        ground.rotation.x = -Math.PI/2;
+        ground.rotation.x = -Math.PI / 2;
 
         ground.receiveShadow = true;
 
@@ -130,63 +223,104 @@ export default class Engine {
 
     }
 
+    /* ==========================
+       SKY
+    ========================== */
+
+    createSky() {
+
+        const sky = new THREE.Mesh(
+
+            new THREE.SphereGeometry(
+
+                500,
+
+                32,
+
+                32
+
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color: 0x87CEEB,
+
+                side: THREE.BackSide
+
+            })
+
+        );
+
+        this.scene.add(sky);
+
+    }
+            /* ==========================
+       ENVIRONMENT
+    ========================== */
+
     createEnvironment() {
 
-        for(let i=0;i<60;i++){
+        for (let i = 0; i < 50; i++) {
 
-            const cube =
-                new THREE.Mesh(
+            const width = 2 + Math.random() * 6;
+            const height = 2 + Math.random() * 10;
+            const depth = 2 + Math.random() * 6;
 
-                    new THREE.BoxGeometry(
+            const box = new THREE.Mesh(
 
-                        2 + Math.random()*4,
+                new THREE.BoxGeometry(
+                    width,
+                    height,
+                    depth
+                ),
 
-                        2 + Math.random()*8,
+                new THREE.MeshStandardMaterial({
 
-                        2 + Math.random()*4
+                    color: Math.random() * 0xffffff
 
-                    ),
-
-                    new THREE.MeshStandardMaterial({
-
-                        color:Math.random()*0xffffff
-
-                    })
-
-                );
-
-            cube.position.set(
-
-                (Math.random()-0.5)*180,
-
-                cube.geometry.parameters.height/2,
-
-                (Math.random()-0.5)*180
+                })
 
             );
 
-            cube.castShadow = true;
-            cube.receiveShadow = true;
+            box.position.set(
 
-            cube.name = "Wall";
+                (Math.random() - 0.5) * this.worldSize,
 
-            this.scene.add(cube);
+                height / 2,
+
+                (Math.random() - 0.5) * this.worldSize
+
+            );
+
+            box.castShadow = true;
+
+            box.receiveShadow = true;
+
+            box.name = "Wall";
+
+            this.walls.push(box);
+
+            this.scene.add(box);
 
         }
 
     }
 
-    spawnEnemies(){
+    /* ==========================
+       ENEMIES
+    ========================== */
 
-        for(let i=0;i<10;i++){
+    spawnEnemies() {
+
+        for (let i = 0; i < this.enemyCount; i++) {
 
             const enemy = new Enemy(
 
                 this.scene,
 
-                (Math.random()-0.5)*100,
+                (Math.random() - 0.5) * this.worldSize,
 
-                (Math.random()-0.5)*100
+                (Math.random() - 0.5) * this.worldSize
 
             );
 
@@ -195,31 +329,73 @@ export default class Engine {
         }
 
     }
-        setupEvents() {
 
-        window.addEventListener("mousedown", () => {
+    /* ==========================
+       EVENTS
+    ========================== */
 
-            this.weapon.shoot();
+    setupEvents() {
 
-        });
+        window.addEventListener(
 
-        window.addEventListener("keydown", (e) => {
+            "mousedown",
 
-            if (e.code === "KeyR") {
+            () => {
 
-                this.weapon.reload();
+                this.weapon.shoot();
 
             }
 
-        });
+        );
+
+        window.addEventListener(
+
+            "keydown",
+
+            (event) => {
+
+                if (event.code === "KeyR") {
+
+                    this.weapon.reload();
+
+                }
+
+            }
+
+        );
 
     }
+            /* ==========================
+       UPDATE
+    ========================== */
 
     update(delta) {
 
+        /* Player */
+
         this.player.update(delta);
 
-        for (const enemy of this.enemies) {
+        /* Weapon */
+
+        if (this.weapon.update) {
+
+            this.weapon.update(delta);
+
+        }
+
+        /* Enemies */
+
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+
+            const enemy = this.enemies[i];
+
+            if (enemy.dead) {
+
+                this.enemies.splice(i, 1);
+
+                continue;
+
+            }
 
             enemy.update(
 
@@ -231,7 +407,29 @@ export default class Engine {
 
         }
 
+        /* Respawn enemies */
+
+        while (this.enemies.length < this.enemyCount) {
+
+            const enemy = new Enemy(
+
+                this.scene,
+
+                (Math.random() - 0.5) * this.worldSize,
+
+                (Math.random() - 0.5) * this.worldSize
+
+            );
+
+            this.enemies.push(enemy);
+
+        }
+
     }
+
+    /* ==========================
+       RENDER
+    ========================== */
 
     render() {
 
@@ -244,23 +442,3 @@ export default class Engine {
         );
 
     }
-
-    start() {
-
-        const animate = () => {
-
-            requestAnimationFrame(animate);
-
-            const delta = this.clock.getDelta();
-
-            this.update(delta);
-
-            this.render();
-
-        };
-
-        animate();
-
-    }
-
-}
