@@ -99,23 +99,27 @@ export default class Weapon {
         const objects =
             this.scene.children;
 
-        const hit =
-            this.raycaster.intersectObjects(
-                objects,
-                true
-            );
+       const hit = this.raycaster.intersectObjects(
+    this.scene.children,
+    true
+);
 
-        if(hit.length){
+if (hit.length > 0) {
 
-            console.log(
-                "Hit:",
-                hit[0].object.name
-            );
+    const object = hit[0].object;
 
-        }
+    if (
+        object.parent &&
+        object.parent.userData.enemy
+    ) {
+
+        object.parent.userData.enemy.takeDamage(
+            this.damage
+        );
 
     }
 
+}
     reload(){
 
         if(this.reloading)
